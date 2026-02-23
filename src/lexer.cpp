@@ -1,0 +1,249 @@
+#include "lexer.h"
+#include <cctype>
+
+using namespace std;
+
+inline bool isAlpha(char c){ return std::isalpha((unsigned char)c); }
+inline bool isAlnum(char c){ return std::isalnum((unsigned char)c); }
+inline bool isSpace(char c){ return std::isspace((unsigned char)c); }
+
+// --------------------------------
+string normalizeJSXText(const string& input){
+
+    string result;
+    bool last=false;
+
+    for(char c:input){
+
+        if(c=='\n'||c=='\r'||c=='\t')
+            c=' ';
+
+        if(isSpace(c)){
+            if(!last){
+                result+=' ';
+                last=true;
+            }
+        }else{
+            result+=c;
+            last=false;
+        }
+    }
+
+    if(!result.empty() && result.front()==' ')
+        result.erase(result.begin());
+
+    return result;
+}
+
+// --------------------------------
+string readExpression(const string& src,size_t& pos){
+
+    string expr;
+    int depth=1;
+
+    while(pos<src.size() && depth>0){
+
+        char c=src[pos];
+
+        if(c=='{') depth++;
+        else if(c=='}') depth--;
+
+        if(depth>0) expr+=c;
+
+        pos++;
+    }
+
+    return expr;
+}
+
+// --------------------------------
+Lexer::Lexer(const string& src){
+    source=src;
+    pos=0;
+    insideJSX=false;
+    jsxDepth=0;
+}
+
+// --------------------------------
+vector<Token> Lexer::tokenize(){
+
+    vector<Token> tokens;
+
+    auto peek=[&](int o=0)->char{
+        if(pos+o>=source.size()) return '\0';
+        return source[pos+o];
+    };
+
+    while(pos<source.size()){
+
+        char c=peek();
+
+        if(!insideJSX && isSpace(c)){
+            pos++;
+            continue;
+        }
+
+        // DEF
+        if(source.compare(pos,3,"def")==0 && !isAlnum(peek(3))){
+            tokens.push_back({DEF,"def"});
+            pos+=3;
+            continue;
+        }
+
+        // RETURN
+        if(source.compare(pos,6,"return")==0 && !isAlnum(peek(6))){
+            tokens.push_back({RETURN,"return"});
+            pos+=6;
+            continue;
+        }
+
+        // STRING
+        if(peek()=='"'){
+            pos++;
+            string v;
+            while(peek()!='"' && peek()!='\0')
+                v+=source[pos++];
+            if(peek()=='"') pos++;
+            tokens.push_back({STRING,v});
+            continue;
+        }
+
+        // CLOSE TAG
+        if(peek()=='<' && peek(1)=='/'){
+            pos+=2;
+            string tag;
+            while(isAlnum(peek()))
+                tag+=source[pos++];
+            if(peek()=='>') pos++;
+
+            tokens.push_back({TAG_CLOSE,tag});
+
+            jsxDepth--;
+            if(jsxDepth<=0) insideJSX=false;
+            continue;
+        }
+
+        // OPEN TAG
+        if(peek()=='<' && isAlpha(peek(1))){
+
+            pos++;
+            string tag;
+            while(isAlnum(peek()))
+                tag+=source[pos++];
+
+            tokens.push_back({TAG_OPEN,tag});
+            insideJSX=true;
+            jsxDepth++;
+
+            while(pos<source.size()){
+
+                while(isSpace(peek())) pos++;
+
+                if(peek()=='/' && peek(1)=='>'){
+                    tokens.push_back({SELF_CLOSE,"/>"});
+                    pos+=2;
+                    jsxDepth--;
+                    if(jsxDepth<=0) insideJSX=false;
+                    goto next_loop;
+                }
+
+                if(peek()=='>'){
+                    pos++;
+                    break;
+                }
+
+                if(isAlpha(peek())){
+
+                    string name;
+                    while(isAlnum(peek()))
+                        name+=source[pos++];
+
+                    tokens.push_back({ATTRIBUTE_NAME,name});
+
+                    while(isSpace(peek())) pos++;
+
+                    if(peek()=='='){
+                        tokens.push_back({EQUAL,"="});
+                        pos++;
+                    }
+
+                    while(isSpace(peek())) pos++;
+
+                    if(peek()=='"'){
+                        pos++;
+                        string v;
+                        while(peek()!='"')
+                            v+=source[pos++];
+                        pos++;
+                        tokens.push_back({ATTRIBUTE_VALUE,v});
+                    }
+                    else if(peek()=='{'){
+                        pos++;
+                        tokens.push_back({
+                            ATTRIBUTE_EXPR,
+                            readExpression(source,pos)
+                        });
+                    }
+                }
+                else pos++;
+            }
+            continue;
+        }
+
+        // JSX EXPRESSION
+        if(insideJSX && peek()=='{'){
+            pos++;
+            tokens.push_back({
+                EXPRESSION,
+                readExpression(source,pos)
+            });
+            continue;
+        }
+
+        // TEXT
+        if(insideJSX && peek()!='<' && peek()!='{'){
+            string text;
+            while(peek()!='<' && peek()!='{' && pos<source.size())
+                text+=source[pos++];
+
+            string cleaned=normalizeJSXText(text);
+
+            if(!cleaned.empty())
+                tokens.push_back({TEXT,cleaned});
+
+            continue;
+        }
+
+        // IDENTIFIER + JS LITERALS ⭐ FIX
+        if(isAlpha(peek())){
+
+            string id;
+            while(isAlnum(peek()))
+                id+=source[pos++];
+
+            if(id=="true")
+                tokens.push_back({TRUE,"true"});
+            else if(id=="false")
+                tokens.push_back({FALSE,"false"});
+            else if(id=="null")
+                tokens.push_back({NULLTOK,"null"});
+            else
+                tokens.push_back({IDENTIFIER,id});
+
+            continue;
+        }
+
+        if(c=='('){tokens.push_back({LPAREN,"("});pos++;continue;}
+        if(c==')'){tokens.push_back({RPAREN,")"});pos++;continue;}
+        if(c==':'){tokens.push_back({COLON,":"});pos++;continue;}
+        if(c==','){tokens.push_back({COMMA,","});pos++;continue;}
+
+        pos++;
+
+next_loop:
+        continue;
+    }
+
+    tokens.push_back({END,""});
+    return tokens;
+}

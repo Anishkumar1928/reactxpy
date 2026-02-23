@@ -1,0 +1,23 @@
+def inc():
+    alert("🔥 Works!")
+
+def Item(name, price):
+    return <div class="card">
+        {name} = {price * 2}
+    </div>
+
+def App():
+    return <div class="box">
+
+        <h1>PYSX Full Test</h1>
+
+        <Item name={"Apple"} price={10}/>
+        <Item name={"Mango"} price={20}/>
+
+        <button onClick={inc}>
+            Click Test
+        </button>
+
+        {true && <p>Condition OK ✅</p>}
+
+    </div>

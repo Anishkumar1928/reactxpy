@@ -1,0 +1,4 @@
+def Counter(value):
+    return <p>
+        Count is {value}
+    </p>

@@ -1,0 +1,4 @@
+def MathBox(a, b):
+    return <div class="card">
+        Result = {a + b * 2}
+    </div>

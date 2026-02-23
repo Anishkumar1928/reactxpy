@@ -1,0 +1,4 @@
+def Greet(name):
+    return <div class="card">
+        Hello {name}
+    </div>

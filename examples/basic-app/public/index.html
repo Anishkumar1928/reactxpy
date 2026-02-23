@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PYSX Test</title>
+
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    background:#0f172a;
+    color:white;
+    padding:40px;
+}
+.box {
+    background:#1e293b;
+    padding:20px;
+    border-radius:10px;
+}
+.card {
+    background:#334155;
+    margin:10px 0;
+    padding:10px;
+    border-radius:6px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="root"></div>
+
+<script type="module">
+import App from "../dist/bundle.js";
+
+const root = ReactDOM.createRoot(
+    document.getElementById("root")
+);
+
+root.render(React.createElement(App));
+</script>
+
+</body>
+</html>

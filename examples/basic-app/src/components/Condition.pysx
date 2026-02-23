@@ -1,0 +1,4 @@
+def Condition(flag):
+    return <div>
+        {flag && <p>Condition TRUE ✅</p>}
+    </div>
