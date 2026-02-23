@@ -167,10 +167,104 @@ You **do not** need to type `className="foo"`. The underlying Generator parses t
 # React.createElement("div", { className: "card-outline" })
 ```
 
+## 7. Zero-Dependency Toolchain Architecture
+
+ReactXPy completely fundamentally eliminates Node.js and the NPM ecosystem from your build pipeline. It achieves this via a three-part native architecture:
+
+### 1. `reactxpy_compiler` (Native Executable)
+
+At the heart of the framework is a C++ executable. When you `pip install`, Python triggers GCC/Clang to compile the transpiler onto your specific OS (Windows `.exe` or Unix binary). It executes via the `reactxpy` CLI.
+It reads `.pysx` files, skips the slow Python runtime, parses the syntax into a highly optimized AST memory tree, and drops ES6 Javascript bundles directly onto the disk in milliseconds.
+
+### 2. The Lexer & Generator (AST Engine)
+
+- **Lexer**: Analyzes tokens within the file. It detects when you type `def` and toggles on "Pythonic Scope". When it sees `<div`, it toggles the AST into "HTML / JSX Scope" safely isolating operators like `||` and `{}`.
+- **Parser**: Converts the tokens into a component tree `ProgramNode -> FunctionNode -> JSXNode`.
+- **Generator**: Scans the node tree. This is where `transformPythonKeywords` maps `True` -> `true` and the system injects `ReactXPy.useState()` namespace wrappers to safely bridge memory.
+- **Linker**: Concatenates multiple `.js` component files into a single, cohesive `bundle.js` without requiring Webpack.
+
+### 3. The Local Reloader (`dev.py` & `build.py`)
+
+ReactXPy ships with a pure-Python threaded watcher server.
+
+1. `build.py` runs recursively through `/src`, farming `.pysx` files into the C++ compiler.
+2. `dev.py` starts a concurrent `http.server` running on `localhost:3000`.
+3. It recursively watches `os.stat().st_mtime` for file modifications. When you hit save, the C++ executable fires, rebuilding the entire bundle instantly.
+4. The backend hits the `/version` endpoint, which increments and triggers the frontend `window.location.reload()` hook.
+
 ---
 
-## 7. Limitations & Horizon Features
+## 8. State Hook Scope Caching
 
-- **Array Mapping syntax**: Currently, inline map arrays require `React.createElement` wrappers if parsing complex nested tags, due to the single-pass lexing engine limitations:
-  `{items.map(lambda i: React.createElement("li", null, i))}`
-- **ES6 Imports**: Because the pipeline bundles your AST together via a lightweight zero-dependency wrapper loader, you do not need `import "components"` headers if everything is natively within the `/src/` folder scope! The transpiler handles the module maps globally for you.
+ReactXPy binds React's virtual state mapping to its `runtime.js` hook bridge. The `useState` variable destructuring scope enforces closure rules during transpilation.
+
+```python
+def Tracker():
+    # count is locked into the closure of the Tracker function scope natively
+    count, setCount = useState(0)
+
+    def logAndIncrement():
+        console.log("Current Hits: ", count)
+        setCount(count + 1)
+
+    return <button onClick={logAndIncrement}>Click</button>
+```
+
+---
+
+## 9. Array Mapping Syntactical Structures
+
+When rendering lists dynamically inside ReactXPy using JSX escape tags `{ ... }`, the compiler evaluates the mapping natively via Javascript `.map()` arrays.
+
+**Rule:** Because the native Lexer handles one-pass translation, when inside `.map()`, you must currently use inline native `React.createElement` syntax instead of writing `<div />` strings if nesting deep elements. This safely prevents recursive AST looping violations.
+
+```python
+# TaskList.reactxpy
+def TaskList(props):
+    todos, setTodos = useState([
+        {id: 1, text: "Finish ReactXPy", done: False},
+        {id: 2, text: "Publish PyPI", done: True}
+    ])
+
+    # ❌ INCORRECT (Lexer limit inside nested mapping blocks)
+    # {todos.map(lambda t: <div>{t.text}</div>)}
+
+    # ✅ CORRECT ARRAY EVALUATION
+    return <div class="task-list">
+        {
+          todos.map(lambda t: React.createElement(
+              "div",
+              { className: "item" },
+              React.createElement("input", { type: "checkbox", checked: t.done }),
+              React.createElement("span", null, t.text)
+          ))
+        }
+    </div>
+```
+
+---
+
+## 10. Cross-Module Importing (`App.reactxpy`)
+
+ReactXPy flattens imports securely across the framework.
+Inside `src/App.pysx`, you can universally load components deployed anywhere adjacent within the `src/` tree just by declaring their standard Python import identifier.
+
+```python
+# Automatically loads `/src/components/CounterApp.pysx` during AST Linker Build
+import CounterApp
+
+def App():
+    return <main>
+       <CounterApp />
+    </main>
+```
+
+---
+
+## 11. Known Edge Cases & Limitations
+
+As ReactXPy evolves, you must follow strict semantic logic to prevent Compiler Aborts:
+
+1. **Nested Curly Braces**: Do not nest double-curly syntax logic mapping (e.g. `{{ foo: bar }}`). Render nested properties natively: `{ JSON.stringify({foo: "bar"}) }`.
+2. **Lambda Colon Spacing**: Ensure `lambda:` declarations do not collide wildly with CSS ternary selectors formatting. Always apply safe white space boundaries inline.
+3. **Empty Tag Void Checks**: Ensure JSX elements always close. Single tags like `<input>` and `<img>` must either strictly have closing boundaries `/>` or the HTML engine may drop nested trees recursively.
