@@ -46,7 +46,7 @@ setup(
     name="pysx",
     version="0.1.0",
     description="Python-Syntax (PYSX) compiler for web applications.",
-    author="Your Name",  # Update as needed
+    author="Anish Kumar",
     packages=find_packages(),
     ext_modules=[pysx_ext],
     cmdclass={"build_ext": PysxBuildExt},

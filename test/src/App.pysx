@@ -1,7 +1,7 @@
 from CounterApp import CounterApp
 
 def App():
-    isAdmin = true
+    isAdmin = True
 
     return <main class="dashboard-wrapper">
         <h1>Anish Kumar</h1>
