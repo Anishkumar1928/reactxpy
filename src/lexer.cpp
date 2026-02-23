@@ -229,11 +229,11 @@ vector<Token> Lexer::tokenize(){
             while(isAlnum(peek()) || peek() == '.' || peek() == '_')
                 id += source[pos++];
 
-            if(id=="true")
+            if(id=="true" || id=="True")
                 tokens.push_back({TRUE,"true"});
-            else if(id=="false")
+            else if(id=="false" || id=="False")
                 tokens.push_back({FALSE,"false"});
-            else if(id=="null")
+            else if(id=="null" || id=="None")
                 tokens.push_back({NULLTOK,"null"});
             else
                 tokens.push_back({IDENTIFIER,id});

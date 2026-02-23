@@ -60,6 +60,29 @@ string transformLambda(string expr){
 }
 
 // --------------------------------
+// Python -> JS keyword transform
+// --------------------------------
+string transformPythonKeywords(string expr){
+    auto replaceWord = [](string& str, const string& from, const string& to) {
+        size_t pos = 0;
+        while ((pos = str.find(from, pos)) != string::npos) {
+            bool left = (pos == 0 || (!isalnum(str[pos-1]) && str[pos-1] != '_'));
+            bool right = (pos + from.length() >= str.length() || (!isalnum(str[pos+from.length()]) && str[pos+from.length()] != '_'));
+            if (left && right) {
+                str.replace(pos, from.length(), to);
+                pos += to.length();
+            } else {
+                pos += from.length();
+            }
+        }
+    };
+    replaceWord(expr, "True", "true");
+    replaceWord(expr, "False", "false");
+    replaceWord(expr, "None", "null");
+    return expr;
+}
+
+// --------------------------------
 // useState transform (stable)
 // --------------------------------
 string transformUseState(string body){
@@ -164,6 +187,7 @@ string prefixProps(string expr,
                    const vector<string>& params)
 {
     expr = transformLambda(expr);
+    expr = transformPythonKeywords(expr);
 
     for(const auto& p:params){
 
@@ -336,6 +360,7 @@ string generateFunction(const FunctionNode& fn){
 
         string body = transformUseState(fn.body);
         body = transformUseEffect(body);
+        body = transformPythonKeywords(body);
         body = transformLambda(body);
 
         out+="  "+body+";\n";
