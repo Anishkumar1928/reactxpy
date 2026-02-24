@@ -1,0 +1,159 @@
+def CodeBlock(props):
+    code = props.code;
+    language = props.language;
+    
+    return <div class="code-wrapper">
+        <div class="code-header">
+            <span class="code-lang">{language}</span>
+            <div class="code-dots">
+                <span class="dot mac-red"></span>
+                <span class="dot mac-yellow"></span>
+                <span class="dot mac-green"></span>
+            </div>
+        </div>
+        <pre class="code-pre">
+            <code>{code}</code>
+        </pre>
+    </div>
+
+def SidebarItem(props):
+    id = props.id;
+    title = props.title;
+    activeId = props.activeId;
+    setActiveId = props.setActiveId;
+    isActive = Object.is(id, activeId);
+    className = isActive ? "sidebar-link active" : "sidebar-link";
+    
+    return <a class={className} href={"#" + id} onClick={lambda e: setActiveId(id)}>
+        {title}
+    </a>
+
+def Header():
+    return <header class="top-header">
+        <div class="header-logo">
+            <span class="logo-icon">⚡</span>
+            <span class="logo-text">ReactXPy Syntax</span>
+        </div>
+        <div class="header-links">
+            <a href="https://github.com" class="icon-link">🐙 GitHub</a>
+            <a href="#" class="btn-primary">v2.0.0 Docs</a>
+        </div>
+    </header>
+
+def DocsApp():
+    activeId, setActiveId = useState("components");
+
+    return <div class="docs-layout">
+        <Header />
+        <div class="docs-container">
+            <aside class="sidebar">
+                <div class="sidebar-nav">
+                    <h4 class="nav-title">Syntax Guide</h4>
+                    <SidebarItem id="architecture" title="0. How It Works (Architecture)" activeId={activeId} setActiveId={setActiveId} />
+                    <SidebarItem id="components" title="1. Defining Components" activeId={activeId} setActiveId={setActiveId} />
+                    <SidebarItem id="hooks" title="2. Using React Hooks" activeId={activeId} setActiveId={setActiveId} />
+                    <SidebarItem id="lambdas" title="3. Arrow Functions" activeId={activeId} setActiveId={setActiveId} />
+                    <SidebarItem id="jsx" title="4. Evaluated JSX" activeId={activeId} setActiveId={setActiveId} />
+                    <SidebarItem id="primitives" title="5. Primitive Transpilation" activeId={activeId} setActiveId={setActiveId} />
+                    <SidebarItem id="arrays" title="6. Array Mapping" activeId={activeId} setActiveId={setActiveId} />
+                </div>
+            </aside>
+            <main class="main-content">
+                <div class="hero-section">
+                    <h1>ReactXPy Syntax Guide</h1>
+                    <p class="hero-subtitle">Interactive frontend applications using native Python.</p>
+                    <p>ReactXPy is a revolutionary syntax paradigm that allows developers to write interactive frontend web applications using native Python <code>.py</code> syntax coupled intricately with HTML (JSX). It bypasses Node.js entirely and utilizes a lightning-fast native C++ transpiler to convert Python code directly into ES6 JavaScript mapped to React DOM components.</p>
+                    <div class="hero-features">
+                        <div class="feature-item"><span>🚀</span> Zero Node.js Dependencies</div>
+                        <div class="feature-item"><span>⚛️</span> Compile Python directly to React DOM</div>
+                        <div class="feature-item"><span>⚡</span> Blazing fast native C++ execution</div>
+                        <div class="feature-item"><span>🔄</span> Hot-reloading built-in via dev.py</div>
+                    </div>
+                </div>
+                
+                <div class="sections-wrapper">
+                    <section id="architecture" class="doc-section">
+                        <h2 class="section-title">0. How It Works (Architecture)</h2>
+                        <div class="section-content">
+                            <p>The compiler is built natively in C++ using the following pipeline:</p>
+                            <div class="architecture-steps">
+                                <div class="arch-step">
+                                    <h4>1. reactxpy_compiler (The C++ Core)</h4>
+                                    <p>When a user runs <code>create-reactxpy-app</code>, a native C++ executable runs locally. It avoids the slow Python runtime entirely.</p>
+                                </div>
+                                <div class="arch-step">
+                                    <h4>2. Lexical Engine</h4>
+                                    <p>Scans the <code>.pysx</code> files. It detects when you type <code>def</code> (Python scope) and when you type <code>&lt;div</code> (JSX scope), safely switching modes.</p>
+                                </div>
+                                <div class="arch-step">
+                                    <h4>3. AST Parser</h4>
+                                    <p>Converts the raw tokens into a secure Abstract Syntax Tree (ProgramNode -> FunctionNode -> JSXNode).</p>
+                                </div>
+                                <div class="arch-step">
+                                    <h4>4. Code Generator</h4>
+                                    <p>Traverses the AST. It natively translates Python keywords (<code>True</code> -> <code>true</code>, <code>None</code> -> <code>null</code>) and injects the <code>ReactXPy.useState</code> bindings dynamically to safely bridge memory.</p>
+                                </div>
+                                <div class="arch-step">
+                                    <h4>5. Linker</h4>
+                                    <p>Flattens all dependencies and imports and concatenates them into a single, cohesive ES6 <code>bundle.js</code> without requiring Webpack.</p>
+                                </div>
+                                <div class="arch-step">
+                                    <h4>6. Live Reloader</h4>
+                                    <p>A pure-Python multi-threaded watcher server (<code>dev.py</code>) that watches file modification times (<code>st_mtime</code>) and triggers instant browser hot-reloads over <code>localhost:3000</code>.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="components" class="doc-section">
+                        <h2 class="section-title">1. Defining Components (Pythonic Functions)</h2>
+                        <div class="section-content">
+                            <p>Components are identical to Python <code>def</code> functions, but they return raw HTML nodes.</p>
+                            <CodeBlock language="python" code={DOCS_DATA.c1} />
+                        </div>
+                    </section>
+
+                    <section id="hooks" class="doc-section">
+                        <h2 class="section-title">2. Deep React Hooks Support</h2>
+                        <div class="section-content">
+                            <p>State destructuring perfectly mimics Python tuple unpacking.</p>
+                            <CodeBlock language="python" code={DOCS_DATA.c2} />
+                        </div>
+                    </section>
+
+                    <section id="lambdas" class="doc-section">
+                        <h2 class="section-title">3. Lambda Event Handlers (No Arrow Functions!)</h2>
+                        <div class="section-content">
+                            <p>Because JavaScript arrow functions violate standard Python parsers, ReactXPy uses inline Python Lambdas that get natively transpiled to JS arrows on the backend.</p>
+                            <CodeBlock language="python" code={DOCS_DATA.c3a} />
+                        </div>
+                    </section>
+
+                    <section id="jsx" class="doc-section">
+                        <h2 class="section-title">4. Logical JSX Expressions inside &#123;&#125;</h2>
+                        <div class="section-content">
+                            <p>The curly braces escape back to logical evaluation. ReactXPy supports native ternary mapping and && short circuiting.</p>
+                            <CodeBlock language="python" code={DOCS_DATA.c4a} />
+                            <CodeBlock language="python" code={DOCS_DATA.c4b} />
+                        </div>
+                    </section>
+                    
+                    <section id="primitives" class="doc-section">
+                        <h2 class="section-title">5. Seamless Primitive Conversions & CSS Classes</h2>
+                        <div class="section-content">
+                            <p>You do NOT need to learn <code>className</code>. You can type <code>class="card"</code> exactly like standard HTML, and the C++ engine maps it dynamically.</p>
+                            <p>Python primitives <code>True</code>, <code>False</code>, and <code>None</code> safely compile downward to <code>true</code>, <code>false</code>, and <code>null</code> automatically.</p>
+                        </div>
+                    </section>
+                    
+                    <section id="arrays" class="doc-section">
+                        <h2 class="section-title">6. Array Mapping Logic</h2>
+                        <div class="section-content">
+                            <p>Because of the strict single-pass lexer layout, mapping arrays natively inside JSX requires inline <code>React.createElement</code> bindings for deep nests.</p>
+                            <CodeBlock language="python" code={DOCS_DATA.c9} />
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>

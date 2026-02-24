@@ -111,9 +111,15 @@ FunctionNode Parser::parseFunction() {
 
         Token t = advance();
 
-        // preserve strings
-        if (t.type == STRING)
-            body += "\"" + t.value + "\"";
+        // preserve strings (output as JS template literals to support multiline)
+        if (t.type == STRING) {
+            string escaped;
+            for(char c : t.value) {
+                if(c == '`') escaped += "\\`";
+                else escaped += c;
+            }
+            body += "`" + escaped + "`";
+        }
         else
             body += t.value;
 

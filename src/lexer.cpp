@@ -98,12 +98,38 @@ vector<Token> Lexer::tokenize(){
         }
 
         // STRING
-        if(peek()=='"'){
-            pos++;
+        if(peek() == '"' || peek() == '\'' || peek() == '`'){
+            char quote = peek();
+            bool isTriple = false;
+            
+            if(pos + 2 < source.size() && peek(1) == quote && peek(2) == quote) {
+                isTriple = true;
+                pos += 3;
+            } else {
+                pos++;
+            }
+            
             string v;
-            while(peek()!='"' && peek()!='\0')
-                v+=source[pos++];
-            if(peek()=='"') pos++;
+            while(pos < source.size()){
+                if(isTriple){
+                    if(pos + 2 < source.size() && peek() == quote && peek(1) == quote && peek(2) == quote){
+                        pos += 3;
+                        break;
+                    }
+                } else {
+                    if(peek() == quote) {
+                        pos++;
+                        break;
+                    }
+                }
+                
+                if(peek() == '\\' && pos + 1 < source.size()){
+                    v += source[pos++];
+                    v += source[pos++];
+                } else {
+                    v += source[pos++];
+                }
+            }
             tokens.push_back({STRING,v});
             continue;
         }

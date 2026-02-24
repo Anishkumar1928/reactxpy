@@ -1,0 +1,6 @@
+import DocsApp from "./components/DocsApp.pysx"
+
+def App():
+    return <div class="app-root">
+        <DocsApp />
+    </div>
