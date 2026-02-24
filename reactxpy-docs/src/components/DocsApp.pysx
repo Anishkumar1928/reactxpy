@@ -120,6 +120,7 @@ def App():
                     <SidebarItem id="jsx" title="4. Evaluated JSX" activeId={activeId} setActiveId={setActiveId} />
                     <SidebarItem id="primitives" title="5. Primitive Transpilation" activeId={activeId} setActiveId={setActiveId} />
                     <SidebarItem id="arrays" title="6. Array Mapping" activeId={activeId} setActiveId={setActiveId} />
+                    <SidebarItem id="es6" title="7. Native ES6 Modules" activeId={activeId} setActiveId={setActiveId} />
                 </div>
             </aside>
             <main Class="main-content">
@@ -147,7 +148,7 @@ def App():
                                 </div>
                                 <div Class="arch-step">
                                     <h4>2. Lexical Engine</h4>
-                                    <p>Scans the <code>.pysx</code> files. It detects when you type <code>def</code> (Python scope) and when you type <code>&lt;div</code> (JSX scope), safely switching modes.</p>
+                                    <p>Scans the <code>.pysx</code> files. It natively understands PEP-8 Whitespace, pushing logical <code>INDENT</code> and <code>DEDENT</code> tokens to build Javascript block scopes securely without you ever typing C-style brackets. It detects Python scopes vs JSX scopes and switches seamlessly.</p>
                                 </div>
                                 <div Class="arch-step">
                                     <h4>3. AST Parser</h4>
@@ -159,7 +160,7 @@ def App():
                                 </div>
                                 <div Class="arch-step">
                                     <h4>5. Linker</h4>
-                                    <p>Flattens all dependencies and imports and concatenates them into a single, cohesive ES6 <code>bundle.js</code> without requiring Webpack.</p>
+                                    <p>Transpiles Python imports into standard Browser ES6 imports (<code>import Component from "./Component.js"</code>) dynamically attaching <code>export default</code> directives natively without Webpack.</p>
                                 </div>
                                 <div Class="arch-step">
                                     <h4>6. Live Reloader</h4>
@@ -215,6 +216,14 @@ def App():
                         <div Class="section-content">
                             <p>Because of the strict single-pass lexer layout, mapping arrays natively inside JSX requires inline <code>React.createElement</code> bindings for deep nests.</p>
                             <CodeBlock language="python" code={DOCS_DATA["c9"]} />
+                        </div>
+                    </section>
+
+                    <section id="es6" Class="doc-section">
+                        <h2 Class="section-title">7. Native ES6 Modules</h2>
+                        <div Class="section-content">
+                            <p>ReactXPy v0.2.0 ditches monolithic bundles entirely! Your Python <i>imports</i> are instantly transpiled into native browser ES6 modules relying natively on the V8 Engine layout.</p>
+                            <CodeBlock language="python" code={DOCS_DATA["c10"]} />
                         </div>
                     </section>
                 </div>

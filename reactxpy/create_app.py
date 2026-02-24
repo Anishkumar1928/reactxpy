@@ -142,8 +142,8 @@ window.ReactXPy = {
 <body>
     <div id="root"></div>
     <script src="../runtime/runtime.js"></script>
-    <script src="../dist/bundle.js"></script>
-    <script>
+    <script type="module">
+        import App from "../dist/App.js";
         ReactXPy.run(App);
         
         // Live Reload Hook
@@ -267,8 +267,6 @@ def main():
         compiled_files.append(output_path)
         
     if compiled_files:
-        print("\\n🔗 Linking into dist/bundle.js...")
-        subprocess.run(["reactxpy", "--bundle"] + compiled_files + ["dist/bundle.js"], check=True)
         print("\\n✅ Success! Build complete.")
     else:
         print("❌ Error: No .pysx files found in src directory.")

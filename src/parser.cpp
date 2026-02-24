@@ -40,6 +40,31 @@ bool Parser::check(TokenType type) {
 }
 
 // =================================
+// IMPORT PARSER
+// =================================
+ImportNode Parser::parseImport() {
+    ImportNode imp;
+    imp.type = IMPORT_DEFAULT;
+    
+    match(IMPORT);
+    
+    if (check(IDENTIFIER)) {
+        imp.module = advance().value;
+    } else {
+        throw runtime_error("Expected identifier after import");
+    }
+    
+    // consume optional 'from' "path" string
+    if (match(FROM)) {
+        if (check(STRING)) {
+            advance(); 
+        }
+    }
+    
+    return imp;
+}
+
+// =================================
 // PROGRAM PARSER
 // =================================
 ProgramNode Parser::parseProgram() {
@@ -47,7 +72,9 @@ ProgramNode Parser::parseProgram() {
     ProgramNode program;
 
     while (!isAtEnd()) {
-        if (check(DEF))
+        if (check(IMPORT))
+            program.imports.push_back(parseImport());
+        else if (check(DEF))
             program.functions.push_back(parseFunction());
         else
             advance();

@@ -1,0 +1,36 @@
+import CounterApp
+
+def App():
+    CONFIG = {
+        "theme": "dark",
+        "nested": {
+            "spacing": 10,
+            "margin": [1, 2, 3]
+        }
+    }
+
+    items, setItems = useState([])
+
+    if items.length == 0:
+        console.log("List is empty")
+        CONFIG.theme = "light"
+    elif items.length == 1:
+        console.log("List has one item")
+        if True:
+            CONFIG.theme = "blue"
+    else:
+        console.log("List has multiple items")
+        CONFIG.theme = "dark"
+
+    return <div Class="app-root">
+        <h1>ReactXPy v0.2.0 Test</h1>
+        
+        <div Class="array-container">
+            <button onClick={lambda: setItems([...items, items.length])}>Add Item</button>
+            <div Class="list">
+                { items.map(lambda t: <b>{t}</b>) }
+            </div>
+        </div>
+
+        <CounterApp />
+    </div>

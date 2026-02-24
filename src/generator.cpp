@@ -2,6 +2,7 @@
 #include "ast.h"
 #include <cctype>
 #include <vector>
+#include <regex>
 
 using namespace std;
 
@@ -79,6 +80,50 @@ string transformPythonKeywords(string expr){
     replaceWord(expr, "True", "true");
     replaceWord(expr, "False", "false");
     replaceWord(expr, "None", "null");
+    
+    // NATIVE PYTHON BLOCK REPLACEMENTS
+    expr = std::regex_replace(expr, std::regex("\\bFalse\\b"), "false");
+    expr = std::regex_replace(expr, std::regex("\\bNone\\b"), "null");
+    
+    // Heal JS Comparison syntax split cleanly by AST spacing.
+    expr = std::regex_replace(expr, std::regex("=\\s+="), "==");
+    expr = std::regex_replace(expr, std::regex("!\\s+="), "!=");
+    expr = std::regex_replace(expr, std::regex("<\\s+="), "<=");
+    expr = std::regex_replace(expr, std::regex(">\\s+="), ">=");
+    
+    // Block Transformations & Parenthesis Wrapping
+    expr = std::regex_replace(expr, std::regex("\\belif\\b"), "else if");
+    
+    // Explicitly target Python Block Colons to preserve nested dictionaries
+    expr = std::regex_replace(expr, std::regex("\\b(if|else if|while|for)\\s+([^{]+?)\\s*:\\s*\\{"), "$1 ($2) {");
+    expr = std::regex_replace(expr, std::regex("\\b(else|try|finally)\\s*:\\s*\\{"), "$1 {");
+    expr = std::regex_replace(expr, std::regex("\\bexcept\\s+([^{]+?)\\s*:\\s*\\{"), "catch ($1) {");
+    expr = std::regex_replace(expr, std::regex("\\bexcept\\s*:\\s*\\{"), "catch {");
+    
+    // Fallback for `if` blocks that didn't have colons (already valid or missing)
+    expr = std::regex_replace(expr, std::regex("\\b(if|else if|while|for)\\s+([^{]+?)\\s*\\{"), "$1 ($2) {");
+    
+    // Semicolon termination healing (JS ASI requires newlines, flat ASTs require semicolons)
+    expr = std::regex_replace(expr, std::regex("\\)\\s*([a-zA-Z_])"), "); $1");
+    expr = std::regex_replace(expr, std::regex("\\]\\s*([a-zA-Z_])"), "]; $1");
+    expr = std::regex_replace(expr, std::regex("\"\\s*([a-zA-Z_])"), "\"; $1");
+    expr = std::regex_replace(expr, std::regex("'\\s*([a-zA-Z_])"), "'; $1");
+    expr = std::regex_replace(expr, std::regex("\\}\\s*(?!else\\b|catch\\b|finally\\b)([a-zA-Z_])"), "}; $1");
+    expr = std::regex_replace(expr, std::regex("([0-9])\\s+([a-zA-Z_])"), "$1; $2");
+
+    // ES6 STRICT MODE VARIABLE DECLARATIONS
+    // Inject `var` strictly into standalone assignment operations `x = y`.
+    try {
+        // C++ std::regex doesn't support lookbehinds. Use capture groups to isolate `=` from `==`, `>=`, `<=`, `!=`
+        std::regex assign_re("(^|[^a-zA-Z0-9_.*!<>+=-])([a-zA-Z_][a-zA-Z0-9_]*)\\s+=\\s+(?![=>])");
+        expr = std::regex_replace(expr, assign_re, "$1var $2 = ");
+        
+        // Clean up redundant definitions if the user specifically typed JS bounds manually
+        expr = std::regex_replace(expr, std::regex("var\\s+var\\s+"), "var ");
+        expr = std::regex_replace(expr, std::regex("let\\s+var\\s+"), "let ");
+        expr = std::regex_replace(expr, std::regex("const\\s+var\\s+"), "const ");
+    } catch(std::exception& e) {}
+
     return expr;
 }
 
@@ -244,9 +289,16 @@ string compileInlineJSX(const string& jsx){
     size_t ce=jsx.find("</");
 
     string text=jsx.substr(cs,ce-cs);
+    
+    // Extract anything that continues after the `</tag>` (e.g. closing parenthesis from maps)
+    size_t afterJsx = ce + tag.length() + 3; // +3 for `</` and `>`
+    string after = "";
+    if (afterJsx < jsx.length()) {
+        after = jsx.substr(afterJsx);
+    }
 
     return "React.createElement(\""+tag+
-           "\", " + props + ", \""+escapeJS(text)+"\")";
+           "\", " + props + ", \""+escapeJS(text)+"\")" + after;
 }
 
 bool looksLikeJSX(const string& e){
@@ -404,10 +456,28 @@ string generateFunction(const FunctionNode& fn){
         vector<string> literals;
         string body = maskStrings(fn.body, literals);
 
+        // Strip the redundant function-level initial INDENT `{` token
+        size_t firstBrace = body.find('{');
+        if (firstBrace != string::npos) {
+            bool isFirst = true;
+            for (size_t i = 0; i < firstBrace; i++) {
+                if (!isspace((unsigned char)body[i])) {
+                    isFirst = false;
+                    break;
+                }
+            }
+            if (isFirst) {
+                body.erase(firstBrace, 1);
+            }
+        }
+
         body = transformUseState(body);
         body = transformUseEffect(body);
         body = transformPythonKeywords(body);
         body = transformLambda(body);
+
+        // Strip Python comments natively before JS output logic
+        body = std::regex_replace(body, std::regex("#.*"), "");
 
         body = unmaskStrings(body, literals);
 
@@ -439,9 +509,6 @@ string Generator::generate(const ProgramNode& program)
 {
     string out;
 
-    out+="import * as ReactXPy from "
-         "\"../runtime/runtime.js\";\n\n";
-
     for(const auto& imp:program.imports)
         out+=generateImport(imp);
 
@@ -450,6 +517,10 @@ string Generator::generate(const ProgramNode& program)
 
     for(const auto& fn:program.functions)
         out+=generateFunction(fn);
+
+    if(!program.functions.empty()){
+        out+="export default "+program.functions.back().name+";\n";
+    }
 
     return out;
 }

@@ -6,12 +6,14 @@ If you love Python's indentation-based readability but need the dynamic, compone
 
 ---
 
-## ✨ Core Features (v2)
+## ✨ Core Features (v0.2.1)
 
+- **Native Python Indentation (v0.2.0+):** Write logic with standard Python PEP-8 indentation without worrying about Javascript brackets `{}`.
+- **Native ES6 Modules (v0.2.0+):** The compiler outputs independent, scalable `.js` modules cleanly wired together using `import` and `export default`, eliminating giant monolith bundles!
 - **Pure Python Syntax for Components:** Define your UI components using standard `def ComponentName(props):` definitions, free of brackets and JavaScript boilerplate.
 - **Native Inline JSX:** Seamlessly blend standard HTML/JSX tags directly inside your Python functions. The C++ parser intelligently distinguishes Python control flow from DOM declarations.
-- **State & Hooks Engine (NEW):** ReactXPy v2 natively supports React Hooks! Utilize `useState` and `useEffect` with standard Python assignments and lambdas.
-- **Advanced AST Lexical Engine (v0.1.3):** The C++ parser natively processes single quotes (`'`), Javascript backticks (`` ` ``), and pythonic multiline triple quotes (`"""`). It actively converts multiline text elements into native ES6 Template literals!
+- **State & Hooks Engine:** ReactXPy natively supports React Hooks! Utilize `useState` and `useEffect` with standard Python assignments and lambdas.
+- **Advanced AST Lexical Engine:** The C++ parser natively processes single quotes (`'`), Javascript backticks (`` ` ``), and pythonic multiline triple quotes (`"""`). It actively converts multiline text elements into native ES6 Template literals!
 - **Dynamic Props & Interpolation:** Pass data across components naturally using `{props.value}` syntax. Evaluate complex math or logic inside interpolations instantly.
 - **Native Event Handling:** Bind Python functions directly to DOM events like `onClick={triggerFunc}` without dealing with `this` binding or context scoping.
 - **Powerful Conditional Rendering:** Drive UI states with intuitive boolean logic such as `{isActive && <div Class="badge">Online</div>}` right inside the tree.
@@ -58,7 +60,7 @@ ReactXPy ships with a state-of-the-art interactive CLI to generate standalone ap
    python3 dev.py
    ```
 
-**That's it!** The `dev.py` script automatically watches your `src/` directory for filesystem changes. It instantly hot-recompiles your `.reactxpy` components into deeply-linked browser-safe Javascript bundles (`dist/bundle.js`) and serves it live at `http://localhost:3000`.
+**That's it!** The `dev.py` script automatically watches your `src/` directory for filesystem changes. It instantly hot-recompiles your `.pysx` components into deeply-linked browser-safe Javascript ES6 Modules and serves them live at `http://localhost:3000`.
 
 ---
 
@@ -69,7 +71,7 @@ ReactXPy ships with a state-of-the-art interactive CLI to generate standalone ap
 ReactXPy treats components naturally. You declare them identically to standard Python functions. When you return HTML DOM tags, the compiler natively intercepts it and translates the structure into optimized `React.createElement` syntax trees.
 
 ```python
-# Greet.reactxpy
+# Greet.pysx
 def Greet(name):
     return <div Class="greeting-card">
         <h3>Hello {name}!</h3>
@@ -82,7 +84,7 @@ def Greet(name):
 ReactXPy v2 fully embraces the React runtime. You can manage encapsulated component states easily by destructuring `useState` tuples, and orchestrate browser lifecycle features like API calls or Local Storage using `useEffect`.
 
 ```python
-# CounterApp.reactxpy
+# CounterApp.pysx
 def CounterApp():
     # Native Python Tuple Destructuring
     count, setCount = useState(0)
@@ -104,7 +106,7 @@ def CounterApp():
 ReactXPy supports infinitely nested component architectures. You can import modules seamlessly without Node syntax. It also securely translates HTML attributes (like `class`) into DOM-safe syntax (`className`) automatically.
 
 ```python
-# App.reactxpy
+# App.pysx
 import CounterApp
 
 def App():
@@ -126,9 +128,9 @@ def App():
 ## ⚙️ How the Architecture Works
 
 1. **Native OS Compilation:** When you `pip install reactxpy`, your computer leverages its local `g++` compiler to build a hyper-optimized `.exe` (Windows) or binary (Unix) of the ReactXPy transpiler directly within your Python packages folder.
-2. **Lexical Analysis Engine:** The C++ compiler scans your `.reactxpy` files. It fundamentally understands the boundary between Python variable assignments, indentations, scopes, and HTML tag delimiters.
+2. **Lexical Analysis Engine:** The C++ compiler scans your `.pysx` files. It fundamentally understands the boundary between Python variable assignments, indentations, scopes, and HTML tag delimiters.
 3. **AST Transpilation:** The framework safely merges Javascript operators (like `||` and `&&`), mathematical calculations, and JSX scopes into raw, standalone Javascript mappings.
-4. **Dependency-Free Bundle:** The compiler bridges your states via a lightweight `runtime.js` hook memory wrapper. It drops ES module syntax entirely—so you don't even need a server! You can double-click `index.html` directly from a USB stick and the app will flawlessly function offline in standard browsers.
+4. **Native ES6 Architecture:** The compiler bridges your states via a lightweight `runtime.js` hook memory wrapper. It leverages modern browser `<script type="module">` loading, bypassing Webpack entirely!
 
 ---
 

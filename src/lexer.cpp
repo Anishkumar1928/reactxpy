@@ -62,6 +62,8 @@ Lexer::Lexer(const string& src){
     pos=0;
     insideJSX=false;
     jsxDepth=0;
+    openBrackets=0;
+    indentStack={0};
 }
 
 // --------------------------------
@@ -77,6 +79,40 @@ vector<Token> Lexer::tokenize(){
     while(pos<source.size()){
 
         char c=peek();
+
+        // ------------------------------------
+        // NATIVE PYTHON INDENTATION TRACKING
+        // ------------------------------------
+        if (!insideJSX && (c == '\n' || c == '\r')) {
+            pos++;
+            if (c == '\r' && peek() == '\n') pos++; // Handle Windows CRLF natively
+            
+            int spaces = 0;
+            while(pos < source.size() && (peek() == ' ' || peek() == '\t')) {
+                if (peek() == '\t') spaces += 4;
+                else spaces += 1;
+                pos++;
+            }
+            
+            // Ignore completely blank lines or full comment lines for indentation logic
+            if (pos < source.size() && (peek() == '\n' || peek() == '\r')) continue;
+            if (pos < source.size() && peek() == '#') continue;
+
+            // Only process indentation if we are NOT inside a raw Python multiline list/dict/tuple!
+            if (openBrackets == 0) {
+                int currentIndent = indentStack.back();
+                if (spaces > currentIndent) {
+                    indentStack.push_back(spaces);
+                    tokens.push_back({INDENT, "{"});
+                } else if (spaces < currentIndent) {
+                    while (indentStack.size() > 1 && indentStack.back() > spaces) {
+                        indentStack.pop_back();
+                        tokens.push_back({DEDENT, "}"});
+                    }
+                }
+            }
+            continue;
+        }
 
         if(!insideJSX && isSpace(c)){
             pos++;
@@ -94,6 +130,20 @@ vector<Token> Lexer::tokenize(){
         if(source.compare(pos,6,"return")==0 && !isAlnum(peek(6))){
             tokens.push_back({RETURN,"return"});
             pos+=6;
+            continue;
+        }
+
+        // IMPORT
+        if(source.compare(pos,6,"import")==0 && !isAlnum(peek(6))){
+            tokens.push_back({IMPORT,"import"});
+            pos+=6;
+            continue;
+        }
+        
+        // FROM
+        if(source.compare(pos,4,"from")==0 && !isAlnum(peek(4))){
+            tokens.push_back({FROM,"from"});
+            pos+=4;
             continue;
         }
 
@@ -267,17 +317,17 @@ vector<Token> Lexer::tokenize(){
             continue;
         }
 
-        if(c=='('){tokens.push_back({LPAREN,"("});pos++;continue;}
-        if(c==')'){tokens.push_back({RPAREN,")"});pos++;continue;}
-        if(c=='['){tokens.push_back({LBRACKET,"["});pos++;continue;}
-        if(c==']'){tokens.push_back({RBRACKET,"]"});pos++;continue;}
+        if(c=='('){openBrackets++; tokens.push_back({LPAREN,"("});pos++;continue;}
+        if(c==')'){openBrackets--; tokens.push_back({RPAREN,")"});pos++;continue;}
+        if(c=='['){openBrackets++; tokens.push_back({LBRACKET,"["});pos++;continue;}
+        if(c==']'){openBrackets--; tokens.push_back({RBRACKET,"]"});pos++;continue;}
         if(c==':'){tokens.push_back({COLON,":"});pos++;continue;}
         if(c==','){tokens.push_back({COMMA,","});pos++;continue;}
         if(c=='='){tokens.push_back({EQUAL,"="});pos++;continue;}
         
         // Add Brace Token Parsers for valid internal JS Mapping
-        if(c=='{'){tokens.push_back({IDENTIFIER,"{"});pos++;continue;}
-        if(c=='}'){tokens.push_back({IDENTIFIER,"}"});pos++;continue;}
+        if(c=='{'){openBrackets++; tokens.push_back({IDENTIFIER,"{"});pos++;continue;}
+        if(c=='}'){openBrackets--; tokens.push_back({IDENTIFIER,"}"});pos++;continue;}
 
         // Catch all unknown valid operators (like +, -, ||, &&, ;, !, ?)
         if(!isSpace(c) && !isAlpha(c) && !isdigit(c)) {
@@ -297,6 +347,14 @@ vector<Token> Lexer::tokenize(){
 
 next_loop:
         continue;
+    }
+
+    // ------------------------------------
+    // EOF FLUSH (Clear leftover scopes)
+    // ------------------------------------
+    while(indentStack.size() > 1) {
+        indentStack.pop_back();
+        tokens.push_back({DEDENT, "}"});
     }
 
     tokens.push_back({END,""});
