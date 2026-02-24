@@ -11,6 +11,7 @@ If you love Python's indentation-based readability but need the dynamic, compone
 - **Pure Python Syntax for Components:** Define your UI components using standard `def ComponentName(props):` definitions, free of brackets and JavaScript boilerplate.
 - **Native Inline JSX:** Seamlessly blend standard HTML/JSX tags directly inside your Python functions. The C++ parser intelligently distinguishes Python control flow from DOM declarations.
 - **State & Hooks Engine (NEW):** ReactXPy v2 natively supports React Hooks! Utilize `useState` and `useEffect` with standard Python assignments and lambdas.
+- **Advanced AST Lexical Engine (v0.1.3):** The C++ parser natively processes single quotes (`'`), Javascript backticks (`` ` ``), and pythonic multiline triple quotes (`"""`). It actively converts multiline text elements into native ES6 Template literals!
 - **Dynamic Props & Interpolation:** Pass data across components naturally using `{props.value}` syntax. Evaluate complex math or logic inside interpolations instantly.
 - **Native Event Handling:** Bind Python functions directly to DOM events like `onClick={triggerFunc}` without dealing with `this` binding or context scoping.
 - **Powerful Conditional Rendering:** Drive UI states with intuitive boolean logic such as `{isActive && <div class="badge">Online</div>}` right inside the tree.
@@ -145,7 +146,6 @@ ReactXPy is an actively maintained open-source framework. The current horizon fe
 - [ ] Deep Integrated Server-Side Python Routing.
 
 ---
-
 
 ### License
 
