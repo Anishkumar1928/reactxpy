@@ -1,0 +1,24 @@
+import React from "react"
+import { useState } from "react"
+
+def App(props):
+    let [count, setCount] = useState(0)
+    let isActive = true
+    
+    def handleClick(e):
+        setCount(count + 1)
+        
+    if count > 5:
+        isActive = false
+        
+    for i in range(3):
+        console.log(i)
+        
+    return <div className="container" onClick={handleClick}>
+        <h1>{props.title}</h1>
+        {isActive ? <span>Active</span> : <span>Inactive</span>}
+        <ul>
+            <li>Item 1</li>
+            <li>Item 2</li>
+        </ul>
+    </div>

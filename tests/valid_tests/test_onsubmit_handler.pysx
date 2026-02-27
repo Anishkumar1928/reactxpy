@@ -1,0 +1,2 @@
+def Form():
+    return <form onSubmit={lambda e: e.preventDefault()}>Submit</form>

@@ -1,0 +1,3 @@
+def App():
+    let msg = "Hello World
+    return msg

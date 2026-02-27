@@ -1,0 +1,3 @@
+def App():
+    double = lambda x: x * 2
+    return <p>{double(5)}</p>

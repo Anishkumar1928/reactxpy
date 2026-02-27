@@ -1,0 +1,2 @@
+def Maybe(data):
+    return <div>{data ? data.name : "No data"}</div>

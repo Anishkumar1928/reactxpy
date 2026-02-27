@@ -1,0 +1,4 @@
+def Box():
+    return <div>
+        <span>Inner</span>
+    </div>

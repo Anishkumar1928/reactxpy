@@ -1,0 +1,3 @@
+def Counter():
+    count, setCount = useState(0)
+    return <p>{count}</p>

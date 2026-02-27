@@ -1,0 +1,3 @@
+def Users():
+    users = [{id: 1, name: "John"}]
+    return <ul>{users.map(lambda u: <li key={u.id}>{u.name}</li>)}</ul>

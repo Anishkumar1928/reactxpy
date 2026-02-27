@@ -1,0 +1,2 @@
+def Toggle(isOn):
+    return <div>{isOn && <p>Power is on</p>}</div>

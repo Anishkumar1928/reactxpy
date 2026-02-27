@@ -1,0 +1,2 @@
+def Button(disabled):
+    return <button disabled={disabled}>Click</button>

@@ -1,0 +1,2 @@
+def Status(active):
+    return <span>{active ? "Active" : "Inactive"}</span>

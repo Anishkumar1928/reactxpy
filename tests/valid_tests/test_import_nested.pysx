@@ -1,0 +1,4 @@
+import Layout
+
+def App():
+    return <Layout><p>Child</p></Layout>

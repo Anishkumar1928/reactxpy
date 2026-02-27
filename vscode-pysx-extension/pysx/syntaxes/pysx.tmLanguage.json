@@ -1,0 +1,124 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "ReactXPy",
+  "scopeName": "source.reactxpy",
+
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#functions" },
+    { "include": "#numbers" },
+    { "include": "#strings" },
+    { "include": "#jsx-tags" },
+    { "include": "#attributes" },
+    { "include": "#expressions" }
+  ],
+
+  "repository": {
+
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.reactxpy",
+          "match": "#.*$"
+        }
+      ]
+    },
+
+   
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.reactxpy",
+          "match": "\\b(def|return|if|else|elif|for|while|lambda|import|from|as|pass|break|continue)\\b"
+        },
+        {
+          "name": "constant.language.reactxpy",
+          "match": "\\b(True|False|None)\\b"
+        }
+      ]
+    },
+
+
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.reactxpy",
+          "match": "\\bdef\\s+([A-Za-z_][A-Za-z0-9_]*)"
+        }
+      ]
+    },
+
+
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.reactxpy",
+          "match": "\\b\\d+(\\.\\d+)?\\b"
+        }
+      ]
+    },
+
+
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.reactxpy",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.reactxpy",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.reactxpy",
+          "begin": "'",
+          "end": "'"
+        }
+      ]
+    },
+
+
+    "jsx-tags": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.reactxpy",
+          "match": "</?[A-Za-z][A-Za-z0-9]*"
+        },
+        {
+          "name": "punctuation.definition.tag.end.reactxpy",
+          "match": "/?>"
+        }
+      ]
+    },
+
+   
+    "attributes": {
+      "patterns": [
+        {
+          "name": "entity.other.attribute-name.reactxpy",
+          "match": "\\b[A-Za-z_:][-A-Za-z0-9_:]*(?=\\=)"
+        }
+      ]
+    },
+
+
+    "expressions": {
+      "patterns": [
+        {
+          "name": "meta.embedded.expression.reactxpy",
+          "begin": "\\{",
+          "end": "\\}",
+          "patterns": [
+            { "include": "#keywords" },
+            { "include": "#numbers" },
+            { "include": "#strings" }
+          ]
+        }
+      ]
+    }
+  }
+}

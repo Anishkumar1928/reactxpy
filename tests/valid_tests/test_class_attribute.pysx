@@ -1,0 +1,2 @@
+def Box():
+    return <div Class="container">Content</div>

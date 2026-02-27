@@ -1,10 +1,37 @@
 import os
 import sys
 
+try:
+    from urllib.request import urlopen
+    from urllib.error import URLError
+    HAS_URLLIB = True
+except ImportError:
+    HAS_URLLIB = False
+
 def create_file(path, content):
     with open(path, 'w', encoding='utf-8') as f:
         f.write(content.strip() + '\n')
     print(f"Created {path}")
+
+def download_react_file(filename):
+    """Download React file from unpkg CDN."""
+    if not HAS_URLLIB:
+        return None
+    
+    urls = [
+        f"https://unpkg.com/react@18/umd/{filename}",
+        f"https://unpkg.com/react-dom@18/umd/{filename}"
+    ]
+    
+    for url in urls:
+        if filename in url:
+            try:
+                with urlopen(url, timeout=10) as response:
+                    return response.read().decode('utf-8')
+            except (URLError, Exception) as e:
+                print(f"  Note: Could not download from {url}")
+                continue
+    return None
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] in ["-h", "--help"]:
@@ -128,15 +155,16 @@ window.ReactXPy = {
 };
 """
 
-    # index.html
+    # index.html - Using local React files with CDN fallback
     index_html = """
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>ReactXPy App</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Try local files first, fallback to CDN -->
+    <script src="../runtime/react.development.js" onerror="this.src='https://unpkg.com/react@18/umd/react.development.js'"></script>
+    <script src="../runtime/react-dom.development.js" onerror="this.src='https://unpkg.com/react-dom@18/umd/react-dom.development.js'"></script>
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -395,6 +423,20 @@ if __name__ == "__main__":
     create_file(os.path.join(project_name, "src", "App.pysx"), app_pysx)
     create_file(os.path.join(project_name, "src", "components", "CounterApp.pysx"), counterapp_pysx)
     create_file(os.path.join(project_name, "runtime", "runtime.js"), runtime_js)
+    
+    # Create React JS files (download or use CDN fallback)
+    react_js = download_react_file("react.development.js")
+    react_dom_js = download_react_file("react-dom.development.js")
+    
+    if react_js:
+        create_file(os.path.join(project_name, "runtime", "react.development.js"), react_js)
+    else:
+        print("⚠️  Warning: Could not download react.development.js. Using CDN fallback.")
+        
+    if react_dom_js:
+        create_file(os.path.join(project_name, "runtime", "react-dom.development.js"), react_dom_js)
+    else:
+        print("⚠️  Warning: Could not download react-dom.development.js. Using CDN fallback.")
     create_file(os.path.join(project_name, "public", "index.html"), index_html)
     create_file(os.path.join(project_name, "public", "style.css"), style_css)
     

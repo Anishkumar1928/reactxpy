@@ -57,7 +57,9 @@ string readExpression(const string& src,size_t& pos){
 }
 
 // --------------------------------
-Lexer::Lexer(const string& src){
+Lexer::Lexer(const string& src, ErrorReporter& rep) : reporter(rep) {
+    currentLine = 1;
+    currentColumn = 1;
     source=src;
     pos=0;
     insideJSX=false;
@@ -83,6 +85,8 @@ vector<Token> Lexer::tokenize(){
         // ------------------------------------
         // NATIVE PYTHON INDENTATION TRACKING
         // ------------------------------------
+        if (c == '\n') { currentLine++; currentColumn = 1; }
+        if (c != '\n') currentColumn++;
         if (!insideJSX && (c == '\n' || c == '\r')) {
             pos++;
             if (c == '\r' && peek() == '\n') pos++; // Handle Windows CRLF natively
@@ -103,7 +107,7 @@ vector<Token> Lexer::tokenize(){
                 int currentIndent = indentStack.back();
                 if (spaces > currentIndent) {
                     indentStack.push_back(spaces);
-                    tokens.push_back({INDENT, "{"});
+                    tokens.push_back({INDENT, "{", currentLine, currentColumn});
                 } else if (spaces < currentIndent) {
                     while (indentStack.size() > 1 && indentStack.back() > spaces) {
                         indentStack.pop_back();
@@ -121,21 +125,21 @@ vector<Token> Lexer::tokenize(){
 
         // DEF
         if(source.compare(pos,3,"def")==0 && !isAlnum(peek(3))){
-            tokens.push_back({DEF,"def"});
+            tokens.push_back({DEF, "def", currentLine, currentColumn});
             pos+=3;
             continue;
         }
 
         // RETURN
         if(source.compare(pos,6,"return")==0 && !isAlnum(peek(6))){
-            tokens.push_back({RETURN,"return"});
+            tokens.push_back({RETURN, "return", currentLine, currentColumn});
             pos+=6;
             continue;
         }
 
         // IMPORT
         if(source.compare(pos,6,"import")==0 && !isAlnum(peek(6))){
-            tokens.push_back({IMPORT,"import"});
+            tokens.push_back({IMPORT, "import", currentLine, currentColumn});
             pos+=6;
             continue;
         }
@@ -148,7 +152,7 @@ vector<Token> Lexer::tokenize(){
         
         // FROM
         if(source.compare(pos,4,"from")==0 && !isAlnum(peek(4))){
-            tokens.push_back({FROM,"from"});
+            tokens.push_back({FROM, "from", currentLine, currentColumn});
             pos+=4;
             continue;
         }
@@ -186,7 +190,12 @@ vector<Token> Lexer::tokenize(){
                     v += source[pos++];
                 }
             }
-            tokens.push_back({STRING,v});
+            
+            if (pos >= source.size()) {
+                reporter.report("RX100", "SyntaxError", "Unterminated string literal", currentLine, currentColumn, v.length() + 1);
+            }
+            
+            tokens.push_back({STRING, v, currentLine, currentColumn});
             continue;
         }
 
@@ -198,7 +207,7 @@ vector<Token> Lexer::tokenize(){
                 tag+=source[pos++];
             if(peek()=='>') pos++;
 
-            tokens.push_back({TAG_CLOSE,tag});
+            tokens.push_back({TAG_CLOSE, tag, currentLine, currentColumn});
 
             jsxDepth--;
             if(jsxDepth<=0) insideJSX=false;
@@ -213,7 +222,7 @@ vector<Token> Lexer::tokenize(){
             while(isAlnum(peek()))
                 tag+=source[pos++];
 
-            tokens.push_back({TAG_OPEN,tag});
+            tokens.push_back({TAG_OPEN, tag, currentLine, currentColumn});
             insideJSX=true;
             jsxDepth++;
 
@@ -222,7 +231,7 @@ vector<Token> Lexer::tokenize(){
                 while(isSpace(peek())) pos++;
 
                 if(peek()=='/' && peek(1)=='>'){
-                    tokens.push_back({SELF_CLOSE,"/>"});
+                    tokens.push_back({SELF_CLOSE, "/>", currentLine, currentColumn});
                     pos+=2;
                     jsxDepth--;
                     if(jsxDepth<=0) insideJSX=false;
@@ -240,12 +249,12 @@ vector<Token> Lexer::tokenize(){
                     while(isAlnum(peek()))
                         name+=source[pos++];
 
-                    tokens.push_back({ATTRIBUTE_NAME,name});
+                    tokens.push_back({ATTRIBUTE_NAME, name, currentLine, currentColumn});
 
                     while(isSpace(peek())) pos++;
 
                     if(peek()=='='){
-                        tokens.push_back({EQUAL,"="});
+                        tokens.push_back({EQUAL, "=", currentLine, currentColumn});
                         pos++;
                     }
 
@@ -257,13 +266,15 @@ vector<Token> Lexer::tokenize(){
                         while(peek()!='"')
                             v+=source[pos++];
                         pos++;
-                        tokens.push_back({ATTRIBUTE_VALUE,v});
+                        tokens.push_back({ATTRIBUTE_VALUE, v, currentLine, currentColumn});
                     }
                     else if(peek()=='{'){
                         pos++;
                         tokens.push_back({
                             ATTRIBUTE_EXPR,
-                            readExpression(source,pos)
+                            readExpression(source,pos),
+                            currentLine,
+                            currentColumn
                         });
                     }
                 }
@@ -277,7 +288,9 @@ vector<Token> Lexer::tokenize(){
             pos++;
             tokens.push_back({
                 EXPRESSION,
-                readExpression(source,pos)
+                readExpression(source,pos),
+                currentLine,
+                currentColumn
             });
             continue;
         }
@@ -291,7 +304,7 @@ vector<Token> Lexer::tokenize(){
             string cleaned=normalizeJSXText(text);
 
             if(!cleaned.empty())
-                tokens.push_back({TEXT,cleaned});
+                tokens.push_back({TEXT, cleaned, currentLine, currentColumn});
 
             continue;
         }
@@ -301,7 +314,7 @@ vector<Token> Lexer::tokenize(){
             string num;
             while(isdigit(peek()) || peek() == '.')
                 num += source[pos++];
-            tokens.push_back({IDENTIFIER, num});
+            tokens.push_back({IDENTIFIER, num, currentLine, currentColumn});
             continue;
         }
 
@@ -312,30 +325,32 @@ vector<Token> Lexer::tokenize(){
                 id += source[pos++];
 
             if(id=="true" || id=="True")
-                tokens.push_back({TRUE,"true"});
+                tokens.push_back({TRUE, "true", currentLine, currentColumn});
             else if(id=="false" || id=="False")
-                tokens.push_back({FALSE,"false"});
+                tokens.push_back({FALSE, "false", currentLine, currentColumn});
             else if(id=="null" || id=="None")
-                tokens.push_back({NULLTOK,"null"});
+                tokens.push_back({NULLTOK, "null", currentLine, currentColumn});
             else
-                tokens.push_back({IDENTIFIER,id});
+                tokens.push_back({IDENTIFIER, id, currentLine, currentColumn});
 
             continue;
         }
 
-        if(c=='('){openBrackets++; tokens.push_back({LPAREN,"("});pos++;continue;}
-        if(c==')'){openBrackets--; tokens.push_back({RPAREN,")"});pos++;continue;}
-        if(c=='['){openBrackets++; tokens.push_back({LBRACKET,"["});pos++;continue;}
-        if(c==']'){openBrackets--; tokens.push_back({RBRACKET,"]"});pos++;continue;}
-        if(c==':'){tokens.push_back({COLON,":"});pos++;continue;}
-        if(c==','){tokens.push_back({COMMA,","});pos++;continue;}
-        if(c=='='){tokens.push_back({EQUAL,"="});pos++;continue;}
+        if(c=='('){openBrackets++; tokens.push_back({LPAREN, "(", currentLine, currentColumn});pos++;continue;}
+        if(c==')'){openBrackets--; tokens.push_back({RPAREN, ")", currentLine, currentColumn});pos++;continue;}
+        if(c=='['){openBrackets++; tokens.push_back({LBRACKET, "[", currentLine, currentColumn});pos++;continue;}
+        if(c==']'){openBrackets--; tokens.push_back({RBRACKET, "]", currentLine, currentColumn});pos++;continue;}
+        if(c==':'){tokens.push_back({COLON, ":", currentLine, currentColumn});pos++;continue;}
+        if(c==','){tokens.push_back({COMMA, ",", currentLine, currentColumn});pos++;continue;}
+        if(c=='='){tokens.push_back({EQUAL, "=", currentLine, currentColumn});pos++;continue;}
         
         // Add Brace Token Parsers for valid internal JS Mapping
-        if(c=='{'){openBrackets++; tokens.push_back({IDENTIFIER,"{"});pos++;continue;}
-        if(c=='}'){openBrackets--; tokens.push_back({IDENTIFIER,"}"});pos++;continue;}
+        if(c=='{'){openBrackets++; tokens.push_back({IDENTIFIER, "{", currentLine, currentColumn});pos++;continue;}
+        if(c=='}'){openBrackets--; tokens.push_back({IDENTIFIER,"}", currentLine, currentColumn});pos++;continue;}
 
-        // Catch all unknown valid operators (like +, -, ||, &&, ;, !, ?)
+        // Catch all unknown valid operators (like +, -, ||, &&, ;, !, ?, @, etc)
+        // If it's totally invalid, we still bundle it into an IDENTIFIER to let the parser fail,
+        // OR we can explicitly flag bad characters here.
         if(!isSpace(c) && !isAlpha(c) && !isdigit(c)) {
             string op;
             while(pos < source.size() && !isSpace(peek()) && !isAlpha(peek()) && !isdigit(peek()) &&
@@ -344,7 +359,11 @@ vector<Token> Lexer::tokenize(){
                 op += source[pos++];
             }
             if(!op.empty()) {
-                tokens.push_back({IDENTIFIER, op});
+                // If the user typed an invalid Python/JS operator like `@`
+                if (op.find('@') != string::npos || op.find('$') != string::npos) {
+                    reporter.report("RX101", "SyntaxError", "Invalid character: " + op, currentLine, currentColumn, op.length());
+                }
+                tokens.push_back({IDENTIFIER, op, currentLine, currentColumn});
                 continue;
             }
         }
@@ -360,9 +379,9 @@ next_loop:
     // ------------------------------------
     while(indentStack.size() > 1) {
         indentStack.pop_back();
-        tokens.push_back({DEDENT, "}"});
+        tokens.push_back({DEDENT, "}", currentLine, currentColumn});
     }
 
-    tokens.push_back({END,""});
+    tokens.push_back({END, "", currentLine, currentColumn});
     return tokens;
 }

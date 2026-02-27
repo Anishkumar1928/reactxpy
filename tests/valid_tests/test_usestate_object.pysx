@@ -1,0 +1,3 @@
+def User():
+    user, setUser = useState({name: "John"})
+    return <p>{user.name}</p>

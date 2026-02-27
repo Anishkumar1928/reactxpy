@@ -1,0 +1,3 @@
+def App():
+    useEffect(lambda: localStorage.setItem("key", "value"))
+    return <div>App</div>

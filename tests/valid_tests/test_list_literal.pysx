@@ -1,0 +1,3 @@
+def App():
+    items = [1, 2, 3, 4, 5]
+    return <p>{items[0]}</p>

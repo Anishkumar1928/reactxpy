@@ -1,0 +1,6 @@
+def TodoItem(text, completed):
+    return <li Class={completed ? "done" : ""}>
+        <input type="checkbox" checked={completed} />
+        <span>{text}</span>
+        <button onClick={lambda: console.log("delete")}>Delete</button>
+    </li>

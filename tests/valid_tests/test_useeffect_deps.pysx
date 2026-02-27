@@ -1,0 +1,4 @@
+def App():
+    count, setCount = useState(0)
+    useEffect(lambda: console.log(count), [count])
+    return <div>{count}</div>

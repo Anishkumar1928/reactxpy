@@ -28,6 +28,14 @@ class ReactxpyBuildExt(build_ext):
         # Ensure the output directory exists
         os.makedirs(extdir, exist_ok=True)
         
+        # Check if pre-compiled binary exists in compiler directory
+        precompiled = os.path.join(source_dir, binary_name)
+        if os.path.exists(precompiled):
+            print(f"Using pre-compiled binary: {precompiled}")
+            import shutil
+            shutil.copy2(precompiled, output_binary)
+            return
+        
         # Source files for the C++ compiler
         sources = [
             os.path.join(source_dir, "main.cpp"),
@@ -35,10 +43,11 @@ class ReactxpyBuildExt(build_ext):
             os.path.join(source_dir, "lexer.cpp"),
             os.path.join(source_dir, "generator.cpp"),
             os.path.join(source_dir, "linker.cpp"),
+            os.path.join(source_dir, "errors.cpp"),
         ]
 
         # Compile command
-        compile_cmd = ["g++"] + sources + ["-o", output_binary]
+        compile_cmd = ["g++", "-std=c++17"] + sources + ["-o", output_binary]
         
         print(f"Building ReactXPy compiler: {' '.join(compile_cmd)}")
         subprocess.check_call(compile_cmd)
@@ -48,7 +57,7 @@ reactxpy_ext = Extension("reactxpy.dummy", sources=[])
 
 setup(
     name="reactxpy",
-    version="0.3.0",
+    version="0.3.2",
     description="ReactXPy compiler for web applications.",
     long_description=long_description,
     long_description_content_type="text/markdown",

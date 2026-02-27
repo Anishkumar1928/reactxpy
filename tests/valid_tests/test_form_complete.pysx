@@ -1,0 +1,8 @@
+def Form():
+    email, setEmail = useState("")
+    password, setPassword = useState("")
+    return <form onSubmit={lambda e: e.preventDefault()}>
+        <input type="email" value={email} onChange={lambda e: setEmail(e.target.value)} />
+        <input type="password" value={password} onChange={lambda e: setPassword(e.target.value)} />
+        <button type="submit">Login</button>
+    </form>

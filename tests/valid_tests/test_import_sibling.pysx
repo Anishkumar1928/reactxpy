@@ -1,0 +1,5 @@
+import Nav
+import Sidebar
+
+def App():
+    return <div><Nav /><Sidebar /></div>

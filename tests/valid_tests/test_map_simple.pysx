@@ -1,0 +1,3 @@
+def List():
+    items = ["a", "b", "c"]
+    return <ul>{items.map(lambda x: <li>{x}</li>)}</ul>

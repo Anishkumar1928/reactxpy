@@ -1,0 +1,4 @@
+import Button
+
+def App():
+    return <Button />

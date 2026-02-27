@@ -1,0 +1,3 @@
+def Grid():
+    rows = [[1, 2], [3, 4]]
+    return <div>{rows.map(lambda row: <div>{row.map(lambda cell: <span>{cell}</span>)}</div>)}</div>

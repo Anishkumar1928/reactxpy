@@ -1,0 +1,8 @@
+def Counter():
+    count, setCount = useState(0)
+    useEffect(lambda: document.title = f"Count: {count}", [count])
+    return <div>
+        <p>Count: {count}</p>
+        <button onClick={lambda: setCount(count + 1)}>+</button>
+        <button onClick={lambda: setCount(count - 1)}>-</button>
+    </div>

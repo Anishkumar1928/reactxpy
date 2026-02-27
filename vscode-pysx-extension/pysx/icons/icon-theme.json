@@ -1,0 +1,15 @@
+{
+  "$schema": "vscode://schemas/icon-theme",
+
+  "inherits": "vs-seti-icon-theme",
+
+  "iconDefinitions": {
+    "_pysx": {
+      "iconPath": "./reactxpy.svg"
+    }
+  },
+
+  "fileExtensions": {
+    "pysx": "_pysx"
+  }
+}

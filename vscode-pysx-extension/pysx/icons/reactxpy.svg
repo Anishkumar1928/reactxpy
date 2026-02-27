@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="128"
+     height="128"
+     viewBox="0 0 128 128">
+
+  <!-- Background -->
+  <rect width="128" height="128" rx="22" fill="#61dafb"/>
+
+  <!-- Text -->
+  <text x="64"
+        y="72"
+        font-size="34"
+        font-weight="bold"
+        text-anchor="middle"
+        fill="#0f172a"
+        font-family="Arial, Helvetica, sans-serif">
+    PYSX
+  </text>
+
+</svg>

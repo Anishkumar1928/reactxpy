@@ -1,0 +1,3 @@
+def List():
+    items, setItems = useState([1, 2, 3])
+    return <p>{items.length}</p>

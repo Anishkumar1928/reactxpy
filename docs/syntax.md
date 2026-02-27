@@ -1,10 +1,22 @@
 # ReactXPy Syntax Guide
 
-ReactXPy is a syntax paradigm that allows you to write interactive frontend applications using native Python `.py` syntax coupled intricately with HTML (`JSX`).
+ReactXPy is a syntax paradigm that allows you to write interactive frontend applications using native Python syntax coupled with HTML (JSX).
 
 Under the hood, ReactXPy bypasses Node.js entirely and utilizes a lightning-fast native transpiler to convert your code into ES6 JavaScript mapped directly to React DOM components.
 
-Because ReactXPy transforms code structure rather than interpreting Python live in the browser, there are specific syntactical boundaries you must follow.
+## Table of Contents
+
+1. [Defining Components](#1-defining-components)
+2. [React Hooks](#2-using-react-hooks-usestate-useeffect)
+3. [Python Lambdas](#3-arrow-functions--python-lambdas)
+4. [JSX Expressions](#4-evaluated-jsx-expressions-)
+5. [Primitive Transpilation](#5-primitive-transpilation)
+6. [CSS Class Names](#6-css-class-name-mapping)
+7. [Control Flow](#7-control-flow)
+8. [List Rendering](#8-list-rendering)
+9. [Imports](#9-cross-module-importing)
+10. [Error Codes](#10-error-codes)
+11. [Limitations](#11-known-edge-cases--limitations)
 
 ---
 
@@ -167,84 +179,93 @@ You **do not** need to type `className="foo"`. The underlying Generator parses t
 # React.createElement("div", { className: "card-outline" })
 ```
 
-## 7. Zero-Dependency Toolchain Architecture
-
-ReactXPy completely fundamentally eliminates Node.js and the NPM ecosystem from your build pipeline. It achieves this via a three-part native architecture:
-
-### 1. `reactxpy_compiler` (Native Executable)
-
-At the heart of the framework is a C++ executable. When you `pip install`, Python triggers GCC/Clang to compile the transpiler onto your specific OS (Windows `.exe` or Unix binary). It executes via the `reactxpy` CLI.
-It reads `.pysx` files, skips the slow Python runtime, parses the syntax into a highly optimized AST memory tree, and drops ES6 Javascript bundles directly onto the disk in milliseconds.
-
-### 2. The Lexer & Generator (AST Engine)
-
-- **Lexer**: Analyzes tokens within the file. It detects when you type `def` and toggles on "Pythonic Scope". When it sees `<div`, it toggles the AST into "HTML / JSX Scope" safely isolating operators like `||` and `{}`.
-- **Parser**: Converts the tokens into a component tree `ProgramNode -> FunctionNode -> JSXNode`.
-- **Generator**: Scans the node tree. This is where `transformPythonKeywords` maps `True` -> `true` and the system injects `ReactXPy.useState()` namespace wrappers to safely bridge memory.
-- **Linker**: Concatenates multiple `.js` component files into a single, cohesive `bundle.js` without requiring Webpack.
-
-### 3. The Local Reloader (`dev.py` & `build.py`)
-
-ReactXPy ships with a pure-Python threaded watcher server.
-
-1. `build.py` runs recursively through `/src`, farming `.pysx` files into the C++ compiler.
-2. `dev.py` starts a concurrent `http.server` running on `localhost:3000`.
-3. It recursively watches `os.stat().st_mtime` for file modifications. When you hit save, the C++ executable fires, rebuilding the entire bundle instantly.
-4. The backend hits the `/version` endpoint, which increments and triggers the frontend `window.location.reload()` hook.
-
 ---
 
-## 8. State Hook Scope Caching
+## 7. Control Flow
 
-ReactXPy binds React's virtual state mapping to its `runtime.js` hook bridge. The `useState` variable destructuring scope enforces closure rules during transpilation.
+### If Statements
+
+Standard Python if statements work within component bodies:
 
 ```python
-def Tracker():
-    # count is locked into the closure of the Tracker function scope natively
-    count, setCount = useState(0)
+def Greeting(user):
+    if user:
+        return <h1>Hello, {user.name}!</h1>
+    return <h1>Hello, Stranger!</h1>
+```
 
-    def logAndIncrement():
-        console.log("Current Hits: ", count)
-        setCount(count + 1)
+### Conditional Rendering in JSX
 
-    return <button onClick={logAndIncrement}>Click</button>
+Use JavaScript ternary operators for inline conditions:
+
+```python
+{ isLoggedIn ? <h1>Welcome Back!</h1> : <h1>Please Sign In</h1> }
+```
+
+Use logical AND for conditional display:
+
+```python
+{ hasErrors && <div class="error-modal">Build Failed</div> }
+```
+
+### While and For Loops
+
+Standard Python loops work in component logic:
+
+```python
+def NumberList():
+    numbers = []
+    i = 0
+    while i < 5:
+        numbers.append(i)
+        i += 1
+    return <div>{numbers.join(", ")}</div>
 ```
 
 ---
 
-## 9. Array Mapping Syntactical Structures
+## 8. List Rendering
 
-When rendering lists dynamically inside ReactXPy using JSX escape tags `{ ... }`, the compiler evaluates the mapping natively via Javascript `.map()` arrays.
+### Using map()
 
-**Rule:** Because the native Lexer handles one-pass translation, when inside `.map()`, you must currently use inline native `React.createElement` syntax instead of writing `<div />` strings if nesting deep elements. This safely prevents recursive AST looping violations.
+Render lists using JavaScript's `map()` method:
 
 ```python
-# TaskList.reactxpy
-def TaskList(props):
-    todos, setTodos = useState([
-        {id: 1, text: "Finish ReactXPy", done: False},
-        {id: 2, text: "Publish PyPI", done: True}
-    ])
+def TodoList():
+    todos = [
+        {id: 1, text: "Learn ReactXPy", done: false},
+        {id: 2, text: "Build an app", done: false}
+    ]
+    
+    return <ul>
+        {todos.map(lambda todo: 
+            <li key={todo.id}>
+                {todo.text}
+            </li>
+        )}
+    </ul>
+```
 
-    # ❌ INCORRECT (Lexer limit inside nested mapping blocks)
-    # {todos.map(lambda t: <div>{t.text}</div>)}
+### With Index
 
-    # ✅ CORRECT ARRAY EVALUATION
-    return <div class="task-list">
-        {
-          todos.map(lambda t: React.createElement(
-              "div",
-              { className: "item" },
-              React.createElement("input", { type: "checkbox", checked: t.done }),
-              React.createElement("span", null, t.text)
-          ))
-        }
-    </div>
+```python
+{items.map(lambda item, index: 
+    <li key={index}>{index + 1}. {item}</li>
+)}
+```
+
+### Filter and Map
+
+```python
+{users
+    .filter(lambda u: u.active)
+    .map(lambda u: <span key={u.id}>{u.name}</span>)
+}
 ```
 
 ---
 
-## 10. Cross-Module Importing (`App.reactxpy`)
+## 9. Cross-Module Importing
 
 ReactXPy flattens imports securely across the framework.
 Inside `src/App.pysx`, you can universally load components deployed anywhere adjacent within the `src/` tree just by declaring their standard Python import identifier.
@@ -259,6 +280,73 @@ def App():
     </main>
 ```
 
+### Import Resolution
+
+- `import ComponentName` → imports `./ComponentName.js`
+- Components must be in the same directory or subdirectory
+- ES6 module exports are generated automatically
+
+---
+
+## 10. Error Codes
+
+ReactXPy provides detailed error messages with codes:
+
+| Code | Type | Description |
+|------|------|-------------|
+| RX100 | SyntaxError | Unterminated string literal |
+| RX101 | SyntaxError | Invalid character (e.g., `@`, `$`) |
+| RX200 | SyntaxError | Expected identifier after `import` |
+| RX201 | SyntaxError | Expected function name after `def` |
+| RX202 | SyntaxError | Unexpected closing tag |
+| RX203 | SyntaxError | Incomplete assignment (missing RHS) |
+| RX204 | SyntaxError | Mismatched closing tag |
+| RX205 | SyntaxError | Unterminated JSX tag |
+| RX206 | SyntaxError | Empty attribute value |
+| RX207 | SyntaxError | Expected opening tag |
+| RX208 | SyntaxError | Incomplete `if` statement |
+| RX209 | SyntaxError | Empty lambda expression |
+
+### Common Errors and Fixes
+
+**RX203 - Incomplete Assignment:**
+```python
+# ❌ Wrong
+x, setX = 
+
+# ✅ Correct
+x, setX = useState(0)
+```
+
+**RX206 - Empty Attribute:**
+```python
+# ❌ Wrong
+<input value= />
+
+# ✅ Correct
+<input value={value} />
+```
+
+**RX208 - Incomplete If:**
+```python
+# ❌ Wrong
+if:
+    pass
+
+# ✅ Correct
+if condition:
+    pass
+```
+
+**RX209 - Empty Lambda:**
+```python
+# ❌ Wrong
+<button onClick={lambda:}>
+
+# ✅ Correct
+<button onClick={lambda: handleClick()}>
+```
+
 ---
 
 ## 11. Known Edge Cases & Limitations
@@ -266,5 +354,64 @@ def App():
 As ReactXPy evolves, you must follow strict semantic logic to prevent Compiler Aborts:
 
 1. **Nested Curly Braces**: Do not nest double-curly syntax logic mapping (e.g. `{{ foo: bar }}`). Render nested properties natively: `{ JSON.stringify({foo: "bar"}) }`.
+
 2. **Lambda Colon Spacing**: Ensure `lambda:` declarations do not collide wildly with CSS ternary selectors formatting. Always apply safe white space boundaries inline.
+
 3. **Empty Tag Void Checks**: Ensure JSX elements always close. Single tags like `<input>` and `<img>` must either strictly have closing boundaries `/>` or the HTML engine may drop nested trees recursively.
+
+4. **Tuple Unpacking**: Only use tuple unpacking for `useState()`. Other Python tuple unpacking patterns may not work correctly.
+
+5. **Python Built-ins**: Only use JavaScript-compatible built-ins. Python-specific functions like `len()`, `range()` are not automatically converted.
+
+6. **Lambda Colon Spacing**: Ensure `lambda:` declarations have proper spacing. Avoid collisions with CSS ternary selectors.
+
+7. **Empty Tag Void Checks**: Ensure JSX elements always close. Single tags like `<input>` and `<img>` must have closing boundaries `/>`.
+
+---
+
+## Appendix: Complete Example
+
+```python
+import Header
+import Footer
+
+def App():
+    # State management
+    count, setCount = useState(0)
+    items, setItems = useState(["Apple", "Banana", "Cherry"])
+    
+    # Side effects
+    useEffect(lambda: document.title = f"Count: {count}", [count])
+    
+    # Event handlers
+    def addItem():
+        setItems(items.concat([f"Item {items.length + 1}"]))
+    
+    # Render
+    return <div class="app">
+        <Header title="My App" />
+        
+        <main>
+            <h1>Counter: {count}</h1>
+            <button onClick={lambda: setCount(count + 1)}>
+                Increment
+            </button>
+            
+            <h2>Items</h2>
+            <ul>
+                {items.map(lambda item, i: 
+                    <li key={i}>{item}</li>
+                )}
+            </ul>
+            <button onClick={addItem}>Add Item</button>
+            
+            {count > 5 && <p>You've clicked more than 5 times!</p>}
+        </main>
+        
+        <Footer />
+    </div>
+```
+
+---
+
+

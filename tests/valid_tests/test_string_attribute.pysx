@@ -1,0 +1,2 @@
+def Link():
+    return <a href="https://example.com">Link</a>

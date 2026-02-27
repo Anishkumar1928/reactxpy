@@ -1,4 +1,9 @@
 import TodoApp
 
 def App():
-    return <TodoApp />
+    inputValue, setInputValue = useState("")
+    useEffect(lambda:alert("Hello"))
+    return <div>
+        <h1>{inputValue}</h1>
+        <input type="text" placeholder="What needs to be done?" value={inputValue} onChange={lambda e: setInputValue(e.target.value)} />
+    </div>

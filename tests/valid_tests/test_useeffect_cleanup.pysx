@@ -1,0 +1,3 @@
+def App():
+    useEffect(lambda: lambda: console.log("cleanup"))
+    return <div>App</div>

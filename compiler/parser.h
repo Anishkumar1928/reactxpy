@@ -11,6 +11,7 @@ class Parser {
 private:
     std::vector<Token> tokens;
     std::size_t pos;
+    ErrorReporter& reporter;
 
     Token current();
     Token advance();
@@ -22,7 +23,7 @@ private:
     ImportNode parseImport();
 
 public:
-    explicit Parser(const std::vector<Token>& tokens);
+    explicit Parser(const std::vector<Token>& tokens, ErrorReporter& rep);
 
     ProgramNode parseProgram();
     FunctionNode parseFunction();

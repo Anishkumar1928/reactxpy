@@ -1,0 +1,6 @@
+def Modal(isOpen, onClose):
+    return <div Class={isOpen ? "modal open" : "modal"}>
+        <div Class="modal-content">
+            <button onClick={onClose}>Close</button>
+        </div>
+    </div>

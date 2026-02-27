@@ -1,0 +1,4 @@
+import Card
+
+def App():
+    return <Card title="Hello" content="World" />

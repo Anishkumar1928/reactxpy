@@ -1,0 +1,7 @@
+import NavLink
+
+def Navbar():
+    return <nav>
+        <NavLink href="/">Home</NavLink>
+        <NavLink href="/about">About</NavLink>
+    </nav>

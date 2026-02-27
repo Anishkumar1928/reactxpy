@@ -1,0 +1,3 @@
+def App():
+    useEffect(lambda: console.log("once"), [])
+    return <div>App</div>

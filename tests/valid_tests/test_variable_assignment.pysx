@@ -1,0 +1,4 @@
+def App():
+    x = 10
+    y = 20
+    return <p>{x + y}</p>

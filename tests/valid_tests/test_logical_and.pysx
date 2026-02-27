@@ -1,0 +1,2 @@
+def Alert(show):
+    return <div>{show && <span>Warning</span>}</div>

@@ -1,0 +1,3 @@
+def ActiveUsers():
+    users = [{active: true, name: "John"}]
+    return <ul>{users.filter(lambda u: u.active).map(lambda u: <li>{u.name}</li>)}</ul>

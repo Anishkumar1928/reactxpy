@@ -56,7 +56,11 @@ enum TokenType {
 struct Token {
     TokenType type;
     std::string value;
+    int line;
+    int column;
 };
+
+#include "errors.h"
 
 class Lexer {
 private:
@@ -66,10 +70,15 @@ private:
     int jsxDepth;
     int openBrackets;
     
+    // Position tracking for errors
+    int currentLine;
+    int currentColumn;
+    ErrorReporter& reporter;
+    
     // PEP-8 Whitespace Indentation Tracking Overlay
     std::vector<int> indentStack;
 
 public:
-    explicit Lexer(const std::string& src);
+    explicit Lexer(const std::string& src, ErrorReporter& rep);
     std::vector<Token> tokenize();
 };

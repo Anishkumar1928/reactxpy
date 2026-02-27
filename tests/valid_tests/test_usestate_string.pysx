@@ -1,0 +1,3 @@
+def Input():
+    text, setText = useState("")
+    return <p>{text}</p>

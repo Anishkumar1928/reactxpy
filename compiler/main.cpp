@@ -7,7 +7,8 @@
 #include "lexer.h"
 #include "parser.h"
 #include "generator.h"
-#include "linker.h" // ⭐ New: Include the Linker
+#include "linker.h"
+#include "errors.h"
 
 using namespace std;
 
@@ -87,13 +88,27 @@ int main(int argc, char* argv[]) {
     string source = buffer.str();
     in.close();
 
+    // --- ERROR REPORTER ---
+    ErrorReporter reporter;
+    reporter.setSource(source, inputFile);
+
     // --- LEXER ---
-    Lexer lexer(source);
+    Lexer lexer(source, reporter);
     auto tokens = lexer.tokenize();
 
+    if (reporter.hasErrors()) {
+        reporter.print();
+        return 1;
+    }
+
     // --- PARSER ---
-    Parser parser(tokens);
+    Parser parser(tokens, reporter);
     ProgramNode program = parser.parseProgram();
+
+    if (reporter.hasErrors()) {
+        reporter.print();
+        return 1;
+    }
 
     // --- GENERATOR ---
     string output = Generator::generate(program);

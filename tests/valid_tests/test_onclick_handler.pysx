@@ -1,0 +1,2 @@
+def Button():
+    return <button onClick={lambda: alert("clicked")}>Click</button>

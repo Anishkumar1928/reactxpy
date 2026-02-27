@@ -1,0 +1,25 @@
+{
+  "name": "pysx",
+  "displayName": "ReactXPy Language Support",
+  "version": "0.0.1",
+  "publisher": "anishkumar",
+  "engines": { "vscode": "^1.80.0" },
+
+  "contributes": {
+    "languages": [
+      {
+        "id": "pysx",
+        "extensions": [".pysx"],
+        "aliases": ["ReactXPy", "pysx"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pysx",
+        "scopeName": "source.pysx",
+        "path": "./syntaxes/pysx.tmLanguage.json"
+      }
+    ]
+  }
+}
